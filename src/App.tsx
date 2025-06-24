@@ -1,21 +1,13 @@
 import { useRef, useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Hedder from "./Components/Hedder";
-import Hero from "./Components/Hero";
 import Login from "./Login/Login";
-import Secondpage from "./Components/Secondpage";
-import Thirdpage from "./Components/Thirdpage";
 import Layout from "./layout";
 import Dashboard from "./Components/Dashboard";
-import Booking from "./Components/Booking";
 import Management from "./Components/Management";
 import UserDetail from "./Components/UserDetail";
-<<<<<<< HEAD
 import User from "./Components/User";
-import { useRef, useEffect, useState } from "react";
-=======
-import LoadingPage from "./Components/LoadingPage"; // ✅ Import loading screen
->>>>>>> f9ec824fb0e45095981e1914c1cabd464e694857
+import LoadingPage from "./Components/LoadingPage";
 
 function App() {
   const secondPageRef = useRef<HTMLDivElement>(null);
@@ -68,24 +60,12 @@ function App() {
           element={
             <>
               <Hedder />
-              <Hero onScrollClick={scrollToSecondPage} />
-              <div ref={secondPageRef}>
-                <Secondpage onScrollToThirdPage={scrollToThirdPage} />
-              </div>
-              <div ref={thirdPageRef}>
-                <Thirdpage selectedDate={selectedDate} />
-              </div>
             </>
           }
         />
         {/* ADMIN LAYOUT */}
         <Route path="/admin" element={<Layout />}>
           <Route index path="/admin/dashboard" element={<Dashboard />} />
-          <Route path="/admin/booking" element={<Booking />} />
-          <Route
-            path="/admin/management"
-            element={<Management onScrollToThirdPage={scrollToThirdPage} />}
-          />
           <Route path="/admin/userdetail" element={<UserDetail />} />
           <Route path="/admin/userdetail/user" element={<User />} />
         </Route>
