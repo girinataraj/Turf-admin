@@ -1,0 +1,171 @@
+/* Header title (Dashboard button) */
+.back {
+  width: 200px;
+  height: 61px;
+  background: transparent;
+  border: none;
+  font-weight: 700;
+  font-size: 40px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+/* Filter row with navigation and dropdown */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Left & Right arrow + Date label (month/year) */
+.navigator {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+/* Arrow icon */
+.nav-icon {
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: black;
+}
+
+/* Year/Month display */
+.date-display {
+  min-width: 100px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* "Filter By" label + dropdown */
+.dropdown-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+/* Dropdown box styling */
+.filter-select {
+  padding: 6px 12px;
+  font-weight: bold;
+  background-color: #0f1b2d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+/* Main layout container */
+.dashboard-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* Left: Chart content */
+.graph-content {
+  flex: 2;
+  min-width: 650px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Right: Summary cards */
+.summary-cards {
+  flex: 1;
+  min-width: 240px;
+  max-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Each summary card */
+.summary-card {
+  background-color: white;
+  border: 1px solid black;
+  border-radius: 8px;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive: Tablet */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .graph-content,
+  .summary-cards {
+    width: 100%;
+  }
+
+  .summary-cards {
+    flex-direction: row;
+    justify-content: space-around;
+    margin-top: 20px;
+  }
+
+  .summary-card {
+    flex: 1;
+  }
+}
+
+/* Responsive: Mobile */
+@media (max-width: 768px) {
+  .back {
+    width: 160px;
+    height: 50px;
+    font-size: 28px;
+  }
+
+  .summary-card {
+    font-size: 16px;
+    padding: 16px;
+  }
+
+  .graph-content {
+    padding: 16px;
+  }
+}
+
+/* Extra small screen adjustments */
+@media (max-width: 480px) {
+  .back {
+    width: 140px;
+    height: 44px;
+    font-size: 22px;
+  }
+
+  .summary-card {
+    font-size: 14px;
+    padding: 12px;
+  }
+
+  .filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

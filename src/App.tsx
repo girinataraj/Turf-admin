@@ -4,6 +4,7 @@ import Hedder from "./Components/Hedder";
 import Login from "./Login/Login";
 import Layout from "./layout";
 import Dashboard from "./Components/Dashboard";
+import Booking from "./Components/Booking";
 import Management from "./Components/Management";
 import UserDetail from "./Components/UserDetail";
 import User from "./Components/User";
@@ -66,7 +67,9 @@ function App() {
         {/* ADMIN LAYOUT */}
         <Route path="/admin" element={<Layout />}>
           <Route index path="/admin/dashboard" element={<Dashboard />} />
+          <Route path="/admin/booking" element={<Booking />} />
           <Route path="/admin/userdetail" element={<UserDetail />} />
+          <Route path="/admin/management" element={<Management onScrollToThirdPage={scrollToThirdPage} />} />
           <Route path="/admin/userdetail/user" element={<User />} />
         </Route>
       </Routes>
