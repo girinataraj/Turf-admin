@@ -1,44 +1,76 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRef as reactUseRef } from "react";
 import { useNavigate } from "react-router-dom";
 import back from "../assets/back.svg";
 import "./Management.css";
 
 const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const today = new Date();
+today.setHours(0, 0, 0, 0);
 
-const Secondpage = ({
-  onScrollToThirdPage,
-}: {
-  onScrollToThirdPage: (date: Date) => void;
-}) => {
+type SlotStatus = "available" | "booked" | "disabled" | "maintenance";
+
+type Slot = {
+  time: string;
+  status: SlotStatus;
+  startTime?: string;
+};
+
+type APISlot = {
+  slotId: number;
+  slotDate: string;
+  slotTime: string;
+  status: "Unavailable" | "Maintenance";
+};
+
+const formatTime = (hour: number): string => {
+  const period = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour} ${period}`;
+};
+
+const formatToApiTime = (time: string): string => {
+  const [hourStr, period] = time.trim().split(" ");
+  const hour = hourStr.padStart(2, "0");
+  return `${hour}:00 ${period}`;
+};
+
+const getAllSlots = (): Slot[] => {
+  const slots: Slot[] = [];
+  for (let i = 0; i < 24; i++) {
+    const from = formatTime(i);
+    const to = formatTime((i + 1) % 24);
+    slots.push({
+      time: `${from} to ${to}`,
+      status: "available",
+      startTime: from.toUpperCase().trim(),
+    });
+  }
+  return slots;
+};
+
+const Management = () => {
   const navigate = useNavigate();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const [selectedDate, setSelectedDate] = useState(today);
   const [clickedDate, setClickedDate] = useState<Date | null>(null);
-  const [slots, setSlots] = useState<Slot[]>([]);
+  const [slots, setSlots] = useState<Slot[]>(getAllSlots());
   const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
   const [popupSlotIndex, setPopupSlotIndex] = useState<number | null>(null);
+  const [showMarkPopup, setShowMarkPopup] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const slotRefs = reactUseRef<(HTMLDivElement | null)[]>([]);
 
   const nextWeek = () =>
-    setSelectedDate(
-      (prev) => new Date(prev.getTime() + 7 * 24 * 60 * 60 * 1000)
-    );
-
+    setSelectedDate((prev) => new Date(prev.getTime() + 7 * 86400000));
   const prevWeek = () => {
-    const newDate = new Date(selectedDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const newDate = new Date(selectedDate.getTime() - 7 * 86400000);
     if (newDate >= today) setSelectedDate(newDate);
   };
-
   const nextMonth = () => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(newDate.getMonth() + 1);
     setSelectedDate(newDate);
   };
-
   const prevMonth = () => {
     const newDate = new Date(selectedDate);
     newDate.setMonth(newDate.getMonth() - 1);
@@ -64,30 +96,38 @@ const Secondpage = ({
 
     const fetchSlots = async () => {
       try {
-        const dateString = clickedDate.toISOString().split("T")[0]; // Format: YYYY-MM-DD
-        const response = await fetch(`http://localhost:5125/api/Slots/${dateString}`);
-        const data: APISlot[] = await response.json();
+        const year = clickedDate.getFullYear();
+        const month = String(clickedDate.getMonth() + 1).padStart(2, "0");
+        const day = String(clickedDate.getDate()).padStart(2, "0");
+        const dateString = `${year}-${month}-${day}`;
 
-        const updatedSlots: Slot[] = defaultSlots.map((slot) => ({
+        const response = await fetch(
+          `http://localhost:5125/api/Slots/${dateString}`
+        );
+        const apiSlots: APISlot[] = await response.json();
+
+        const unavailableSet = new Set(
+          apiSlots
+            .filter((slot) => slot.status === "Unavailable")
+            .map((slot) =>
+              slot.slotTime.replace(/\s+/g, " ").trim().toUpperCase()
+            )
+        );
+
+        const updatedSlots: Slot[] = getAllSlots().map((slot) => ({
           ...slot,
-          status: "available",
+          status: unavailableSet.has(
+            slot.startTime!.replace(/\s+/g, " ").trim().toUpperCase()
+          )
+            ? "disabled"
+            : "available",
         }));
-
-        data.forEach((apiSlot) => {
-          const index = updatedSlots.findIndex((s) =>
-            s.time.startsWith(apiSlot.slotTime)
-          );
-          if (index !== -1) {
-            updatedSlots[index].status =
-              apiSlot.status === "Unavailable" ? "disabled" : "maintenance";
-          }
-        });
 
         setSlots(updatedSlots);
         setSelectedSlots([]);
         setSelectAll(false);
       } catch (error) {
-        console.error("Failed to fetch slot data:", error);
+        console.error("❌ Failed to fetch slot data:", error);
       }
     };
 
@@ -100,7 +140,6 @@ const Secondpage = ({
   const handleDateClick = (date: Date) => {
     if (isPastDate(date)) return;
     setClickedDate(date);
-    onScrollToThirdPage(date);
   };
 
   const handleSlotClick = (index: number) => {
@@ -132,9 +171,7 @@ const Secondpage = ({
 
   const handleMarkAsMaintenance = () => {
     const updatedSlots = slots.map((slot, index) =>
-      selectedSlots.includes(index)
-        ? { ...slot, status: "maintenance" as SlotStatus }
-        : slot
+      selectedSlots.includes(index) ? { ...slot, status: "maintenance" } : slot
     );
     setSlots(updatedSlots);
     setSelectedSlots([]);
@@ -150,7 +187,6 @@ const Secondpage = ({
         Management
       </button>
 
-      {/* Month Navigation */}
       <div className="calendar-nav">
         <button className="left-calendar" onClick={prevMonth}>
           &#x276E;
@@ -164,7 +200,6 @@ const Secondpage = ({
         </button>
       </div>
 
-      {/* Week Navigation + Dates */}
       <div className="calendar-nav weekdays-inside-nav">
         <button className="left-calendar" onClick={prevWeek}>
           &#x276E;
@@ -212,19 +247,15 @@ const Secondpage = ({
         {slots.map((slot, index) => (
           <div
             key={index}
-            ref={(el) => {
-              slotRefs.current[index] = el;
-            }}
-            onClick={() => handleSlotClick(index)}
             className={`slot-box ${slot.status} ${
               selectedSlots.includes(index) ? "selected" : ""
             }`}
+            onClick={() => handleSlotClick(index)}
+            ref={(el) => (slotRefs.current[index] = el)}
           >
-            <>
-              <div>{slot.time.split(" to ")[0]}</div>
-              <div className="slot-to">to</div>
-              <div>{slot.time.split(" to ")[1]}</div>
-            </>
+            <div>{slot.time.split(" to ")[0]}</div>
+            <div className="slot-to">to</div>
+            <div>{slot.time.split(" to ")[1]}</div>
           </div>
         ))}
       </div>
@@ -233,9 +264,9 @@ const Secondpage = ({
         <button className="Cancel-maintanance">Cancel</button>
         <button
           className="mark-maintanance"
-          onClick={handleMarkAsMaintenance}
+          onClick={() => setShowMarkPopup(true)}
         >
-          Mark as Maintanance
+          Mark as Maintenance
         </button>
       </div>
 
@@ -275,44 +306,74 @@ const Secondpage = ({
           </div>
         </div>
       )}
+
+      {showMarkPopup && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-content-inner">
+              <h2>Mark as Maintenance</h2>
+              <p>
+                Are you sure you want to mark{" "}
+                <strong>{selectedSlots.length}</strong> slot
+                {selectedSlots.length !== 1 && "s"} as maintenance?
+              </p>
+              <div className="modal-actions">
+                <button
+                  className="remove-maintanance-button"
+                  onClick={async () => {
+                    if (!clickedDate) return;
+
+                    const year = clickedDate.getFullYear();
+                    const month = String(clickedDate.getMonth() + 1).padStart(2, "0");
+                    const day = String(clickedDate.getDate()).padStart(2, "0");
+                    const formattedDate = `${year}-${month}-${day}`;
+
+                    const timeSlots = selectedSlots.map((index) =>
+                      formatToApiTime(slots[index].startTime || "")
+                    );
+
+                    try {
+                      const response = await fetch(
+                        "http://localhost:5125/api/AdminSlotManagement/mark-maintenance",
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            date: formattedDate,
+                            timeSlots,
+                          }),
+                        }
+                      );
+
+                      if (!response.ok) {
+                        throw new Error("Failed to mark maintenance");
+                      }
+
+                      handleMarkAsMaintenance();
+                      setShowMarkPopup(false);
+                    } catch (error) {
+                      console.error("❌ Error marking maintenance:", error);
+                      alert("Failed to mark maintenance. Try again.");
+                    }
+                  }}
+                >
+                  Yes, Confirm
+                </button>
+                <button
+                  className="cancel-popup-button"
+                  onClick={() => setShowMarkPopup(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Secondpage;
-
-// --- Types ---
-type SlotStatus = "available" | "booked" | "disabled" | "maintenance";
-
-type Slot = {
-  time: string;
-  status: SlotStatus;
-};
-
-type APISlot = {
-  slotId: number;
-  slotDate: string;
-  slotTime: string;
-  status: "Unavailable" | "Maintenance";
-};
-
-const defaultSlots: Slot[] = [
-  { time: "6 AM to 7 AM", status: "disabled" },
-  { time: "7 AM to 8 AM", status: "available" },
-  { time: "8 AM to 9 AM", status: "available" },
-  { time: "9 AM to 10 AM", status: "available" },
-  { time: "10 AM to 11 AM", status: "available" },
-  { time: "11 AM to 12 PM", status: "available" },
-  { time: "12 PM to 1 PM", status: "available" },
-  { time: "1 PM to 2 PM", status: "available" },
-  { time: "2 PM to 3 PM", status: "available" },
-  { time: "3 PM to 4 PM", status: "available" },
-  { time: "4 PM to 5 PM", status: "available" },
-  { time: "5 PM to 6 PM", status: "available" },
-  { time: "6 PM to 7 PM", status: "available" },
-  { time: "7 PM to 8 PM", status: "available" },
-  { time: "8 PM to 9 PM", status: "available" },
-  { time: "9 PM to 10 PM", status: "available" },
-  { time: "10 PM to 11 PM", status: "available" },
-  { time: "11 PM to 12 AM", status: "available" },
-];
+export default Management;

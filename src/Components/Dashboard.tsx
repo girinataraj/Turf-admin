@@ -30,12 +30,15 @@ function Dashboard() {
   const isNextMonthDisabled = filter === "Month" && currentDate.isSame(dayjs(), 'month');
   const isNextYearDisabled = filter === "Year" && currentDate.isSame(dayjs(), 'year');
 
+  const totalBookings = today.bookings + past.bookings + upcoming.bookings;
+  const totalHours = today.hours + past.hours + upcoming.hours;
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         const response = await fetch("http://localhost:5125/api/AdminDashboard/dashboard");
         const data = await response.json();
-        setBookingData(data.bookingData); // should contain month, bookings, color
+        setBookingData(data.bookingData); // {month, bookings, color}
         setToday({ bookings: data.today, hours: data.todayHours });
         setUpcoming({ bookings: data.upcoming, hours: data.upcomingHours });
         setPast({ bookings: data.past, hours: data.pastHours });
@@ -101,6 +104,12 @@ function Dashboard() {
             <option value="Year">Year</option>
           </select>
         </div>
+      </div>
+
+      {/* Total summary above the chart */}
+      <div className="total-info">
+        <strong>{totalHours} Hr</strong>
+        <strong>{totalBookings} Bookings</strong>
       </div>
 
       <div className="dashboard-container">
