@@ -114,14 +114,27 @@ const Management = () => {
             )
         );
 
-        const updatedSlots: Slot[] = getAllSlots().map((slot) => ({
-          ...slot,
-          status: unavailableSet.has(
-            slot.startTime!.replace(/\s+/g, " ").trim().toUpperCase()
-          )
-            ? "disabled"
-            : "available",
-        }));
+        const maintenanceSet = new Set(
+          apiSlots
+            .filter((slot) => slot.status === "Maintenance")
+            .map((slot) =>
+              slot.slotTime.replace(/\s+/g, " ").trim().toUpperCase()
+            )
+        );
+
+        const updatedSlots: Slot[] = getAllSlots().map((slot) => {
+          const startTimeNormalized = slot.startTime!
+            .replace(/\s+/g, " ")
+            .trim()
+            .toUpperCase();
+          if (unavailableSet.has(startTimeNormalized)) {
+            return { ...slot, status: "disabled" };
+          } else if (maintenanceSet.has(startTimeNormalized)) {
+            return { ...slot, status: "maintenance" };
+          } else {
+            return { ...slot, status: "available" };
+          }
+        });
 
         setSlots(updatedSlots);
         setSelectedSlots([]);
@@ -282,16 +295,49 @@ const Management = () => {
               <div className="modal-actions">
                 <button
                   className="remove-maintanance-button"
-                  onClick={() => {
-                    setSlots((prevSlots) =>
-                      prevSlots.map((slot, idx) =>
-                        idx === popupSlotIndex
-                          ? { ...slot, status: "available" }
-                          : slot
-                      )
-                    );
-                    setPopupSlotIndex(null);
-                  }}
+                  onClick={async () => {
+  if (!clickedDate || popupSlotIndex === null) return;
+
+  const year = clickedDate.getFullYear();
+  const month = String(clickedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(clickedDate.getDate()).padStart(2, "0");
+  const formattedDate = `${year}-${month}-${day}`;
+
+  const rawTime = slots[popupSlotIndex].startTime || "";
+  const timeSlot = formatToApiTime(rawTime);
+
+  try {
+    const response = await fetch(
+      "http://localhost:5125/api/AdminSlotManagement/delete-maintenance",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          date: formattedDate,
+          timeSlots: [timeSlot],
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to delete maintenance slot");
+    }
+
+    // Refresh the slots after successful deletion
+    setSlots((prevSlots) =>
+      prevSlots.map((slot, idx) =>
+        idx === popupSlotIndex ? { ...slot, status: "available" } : slot
+      )
+    );
+    setPopupSlotIndex(null);
+  } catch (err) {
+    console.error("❌ Failed to delete maintenance:", err);
+    alert("Failed to remove maintenance. Try again.");
+  }
+}}
+
                 >
                   Yes, Remove
                 </button>

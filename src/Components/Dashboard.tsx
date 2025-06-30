@@ -33,22 +33,58 @@ function Dashboard() {
   const totalBookings = today.bookings + past.bookings + upcoming.bookings;
   const totalHours = today.hours + past.hours + upcoming.hours;
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await fetch("http://localhost:5125/api/AdminDashboard/dashboard");
-        const data = await response.json();
-        setBookingData(data.bookingData); // {month, bookings, color}
-        setToday({ bookings: data.today, hours: data.todayHours });
-        setUpcoming({ bookings: data.upcoming, hours: data.upcomingHours });
-        setPast({ bookings: data.past, hours: data.pastHours });
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    };
+useEffect(() => {
+  const fetchGraphData = async () => {
+    try {
+      let url = "";
 
-    fetchDashboardData();
-  }, [filter, currentDate]);
+      if (filter === "Year") {
+        const year = currentDate.year();
+        url = `http://localhost:5125/api/AdminDashboard/year?year=${year}`;
+      } else {
+        const month = currentDate.month() + 1;
+        const year = currentDate.year();
+        url = `http://localhost:5125/api/AdminDashboard/month?month=${month}&year=${year}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const graphData = filter === "Year"
+        ? data.data.map((item: any) => ({
+            month: item.label,
+            bookings: item.bookings,
+            color: item.color
+          }))
+        : data.data.map((item: any) => ({
+            month: `Day ${item.day}`,
+            bookings: item.bookings,
+            color: "#007bff"
+          }));
+
+      setBookingData(graphData);
+    } catch (error) {
+      console.error("Error fetching graph data:", error);
+    }
+  };
+
+const fetchSummaryData = async () => {
+  try {
+    const res = await fetch("http://localhost:5125/api/AdminDashboard/summary");
+    const data = await res.json();
+
+    setToday({ bookings: data.today, hours: data.todayHours });
+    setUpcoming({ bookings: data.upcoming, hours: data.upcomingHours });
+    setPast({ bookings: data.past, hours: data.pastHours });
+  } catch (error) {
+    console.error("Error fetching summary data:", error);
+  }
+};
+
+
+  fetchGraphData();
+  fetchSummaryData();
+}, [filter, currentDate]);
 
   return (
     <div className="dashboard-wrapper">

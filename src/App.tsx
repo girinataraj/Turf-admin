@@ -65,8 +65,8 @@ function App() {
           }
         />
         {/* ADMIN LAYOUT */}
-        <Route path="/admin" element={<Layout />}>
-          <Route index path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/" element={<Layout />}>
+          <Route index path="/" element={<Dashboard />} />
           <Route path="/admin/booking" element={<Booking />} />
           <Route path="/admin/userdetail" element={<UserDetail />} />
           <Route path="/admin/management" element={<Management onScrollToThirdPage={scrollToThirdPage} />} />
