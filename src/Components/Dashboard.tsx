@@ -27,64 +27,68 @@ function Dashboard() {
   const [filter, setFilter] = useState<'Month' | 'Year'>('Year');
   const [currentDate, setCurrentDate] = useState(dayjs());
 
-  const isNextMonthDisabled = filter === "Month" && currentDate.isSame(dayjs(), 'month');
-  const isNextYearDisabled = filter === "Year" && currentDate.isSame(dayjs(), 'year');
+  // ✅ Total values from API
+  const [totalBookings, setTotalBookings] = useState(0);
+  const [totalHours, setTotalHours] = useState(0);
 
-  const totalBookings = today.bookings + past.bookings + upcoming.bookings;
-  const totalHours = today.hours + past.hours + upcoming.hours;
+  const isNextMonthDisabled = filter === 'Month' && currentDate.isSame(dayjs(), 'month');
+  const isNextYearDisabled = filter === 'Year' && currentDate.isSame(dayjs(), 'year');
 
-useEffect(() => {
-  const fetchGraphData = async () => {
-    try {
-      let url = "";
+  useEffect(() => {
+    const fetchGraphData = async () => {
+      try {
+        let url = '';
 
-      if (filter === "Year") {
-        const year = currentDate.year();
-        url = `http://localhost:5125/api/AdminDashboard/year?year=${year}`;
-      } else {
-        const month = currentDate.month() + 1;
-        const year = currentDate.year();
-        url = `http://localhost:5125/api/AdminDashboard/month?month=${month}&year=${year}`;
+        if (filter === 'Year') {
+          const year = currentDate.year();
+          url = `http://localhost:5125/api/AdminDashboard/year?year=${year}`;
+        } else {
+          const month = currentDate.month() + 1;
+          const year = currentDate.year();
+          url = `http://localhost:5125/api/AdminDashboard/month?month=${month}&year=${year}`;
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        // ✅ Set total from API
+        setTotalBookings(data.totalBookings || 0);
+        setTotalHours(data.totalHours || 0);
+
+        const graphData = filter === 'Year'
+          ? data.data.map((item: any) => ({
+              month: item.label,
+              bookings: item.bookings,
+              color: item.color
+            }))
+          : data.data.map((item: any) => ({
+              month: `Day ${item.day}`,
+              bookings: item.bookings,
+              color: '#007bff'
+            }));
+
+        setBookingData(graphData);
+      } catch (error) {
+        console.error('Error fetching graph data:', error);
       }
+    };
 
-      const response = await fetch(url);
-      const data = await response.json();
+    const fetchSummaryData = async () => {
+      try {
+        const res = await fetch('http://localhost:5125/api/AdminDashboard/summary');
+        const data = await res.json();
 
-      const graphData = filter === "Year"
-        ? data.data.map((item: any) => ({
-            month: item.label,
-            bookings: item.bookings,
-            color: item.color
-          }))
-        : data.data.map((item: any) => ({
-            month: `Day ${item.day}`,
-            bookings: item.bookings,
-            color: "#007bff"
-          }));
+        setToday({ bookings: data.today, hours: data.todayHours });
+        setUpcoming({ bookings: data.upcoming, hours: data.upcomingHours });
+        setPast({ bookings: data.past, hours: data.pastHours });
+      } catch (error) {
+        console.error('Error fetching summary data:', error);
+      }
+    };
 
-      setBookingData(graphData);
-    } catch (error) {
-      console.error("Error fetching graph data:", error);
-    }
-  };
-
-const fetchSummaryData = async () => {
-  try {
-    const res = await fetch("http://localhost:5125/api/AdminDashboard/summary");
-    const data = await res.json();
-
-    setToday({ bookings: data.today, hours: data.todayHours });
-    setUpcoming({ bookings: data.upcoming, hours: data.upcomingHours });
-    setPast({ bookings: data.past, hours: data.pastHours });
-  } catch (error) {
-    console.error("Error fetching summary data:", error);
-  }
-};
-
-
-  fetchGraphData();
-  fetchSummaryData();
-}, [filter, currentDate]);
+    fetchGraphData();
+    fetchSummaryData(); // You can remove this if summary cards are not required
+  }, [filter, currentDate]);
 
   return (
     <div className="dashboard-wrapper">
@@ -96,35 +100,35 @@ const fetchSummaryData = async () => {
             className="nav-icon"
             onClick={() =>
               setCurrentDate(prev =>
-                filter === "Month" ? prev.subtract(1, "month") : prev.subtract(1, "year")
+                filter === 'Month' ? prev.subtract(1, 'month') : prev.subtract(1, 'year')
               )
             }
           />
           <span className="date-display">
-            {filter === "Month"
-              ? currentDate.format("MMM YYYY").toUpperCase()
-              : currentDate.format("YYYY")}
+            {filter === 'Month'
+              ? currentDate.format('MMM YYYY').toUpperCase()
+              : currentDate.format('YYYY')}
           </span>
           <ChevronRight
             className="nav-icon"
             onClick={() => {
-              if (filter === "Month" && !isNextMonthDisabled) {
-                setCurrentDate(prev => prev.add(1, "month"));
-              } else if (filter === "Year" && !isNextYearDisabled) {
-                setCurrentDate(prev => prev.add(1, "year"));
+              if (filter === 'Month' && !isNextMonthDisabled) {
+                setCurrentDate(prev => prev.add(1, 'month'));
+              } else if (filter === 'Year' && !isNextYearDisabled) {
+                setCurrentDate(prev => prev.add(1, 'year'));
               }
             }}
             style={{
               opacity:
-                (filter === "Month" && isNextMonthDisabled) ||
-                (filter === "Year" && isNextYearDisabled)
+                (filter === 'Month' && isNextMonthDisabled) ||
+                (filter === 'Year' && isNextYearDisabled)
                   ? 0.3
                   : 1,
               pointerEvents:
-                (filter === "Month" && isNextMonthDisabled) ||
-                (filter === "Year" && isNextYearDisabled)
-                  ? "none"
-                  : "auto"
+                (filter === 'Month' && isNextMonthDisabled) ||
+                (filter === 'Year' && isNextYearDisabled)
+                  ? 'none'
+                  : 'auto'
             }}
           />
         </div>
@@ -133,7 +137,7 @@ const fetchSummaryData = async () => {
           <label>Filter By</label>
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as 'Month' | 'Year')}
+            onChange={e => setFilter(e.target.value as 'Month' | 'Year')}
             className="filter-select"
           >
             <option value="Month">Month</option>
@@ -142,7 +146,7 @@ const fetchSummaryData = async () => {
         </div>
       </div>
 
-      {/* Total summary above the chart */}
+      {/* ✅ Filter-based total summary */}
       <div className="total-info">
         <strong>{totalHours} Hr</strong>
         <strong>{totalBookings} Bookings</strong>
@@ -156,8 +160,8 @@ const fetchSummaryData = async () => {
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip
-                contentStyle={{ backgroundColor: "#fff", border: "1px solid #ccc" }}
-                formatter={(value) => [`${value} bookings`, "Bookings"]}
+                contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc' }}
+                formatter={(value) => [`${value} bookings`, 'Bookings']}
               />
               <Line
                 type="linear"
@@ -182,15 +186,21 @@ const fetchSummaryData = async () => {
         <div className="summary-cards">
           <div className="summary-card">
             <span>Today</span>
-            <span>Bookings: {today.bookings} &nbsp; Hours: {today.hours}</span>
+            <span>
+              Bookings: {today.bookings} &nbsp; Hours: {today.hours}
+            </span>
           </div>
           <div className="summary-card">
             <span>Upcoming</span>
-            <span>Bookings: {upcoming.bookings} &nbsp; Hours: {upcoming.hours}</span>
+            <span>
+              Bookings: {upcoming.bookings} &nbsp; Hours: {upcoming.hours}
+            </span>
           </div>
           <div className="summary-card">
             <span>Past</span>
-            <span>Bookings: {past.bookings} &nbsp; Hours: {past.hours}</span>
+            <span>
+              Bookings: {past.bookings} &nbsp; Hours: {past.hours}
+            </span>
           </div>
         </div>
       </div>
