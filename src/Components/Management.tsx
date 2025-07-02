@@ -248,14 +248,18 @@ const Management = () => {
       </div>
 
       <h1 className="slot-title">Time Slots</h1>
+              
       <section className="select-container">
-        <input
-          type="checkbox"
-          checked={selectAll}
-          onChange={handleSelectAllChange}
-        />
-        <h3>Select all</h3>
+        <label className="select-label">
+          <input
+            type="checkbox"
+            checked={selectAll}
+            onChange={handleSelectAllChange}
+          />
+          <span>Select all</span>
+        </label>
       </section>
+
 
       <div className="slot-grid">
         {slots.map((slot, index) => (

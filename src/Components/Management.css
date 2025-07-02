@@ -128,19 +128,34 @@
 
 .select-container {
   display: flex;
-  margin: 0 80px;
-  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+.select-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.select-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
 }
 
 .select-container input[type="checkbox"] {
-  margin-top: 5px;
-  height: 15px;
-  width: 15px;
+  margin-top: 2px;
+  height: 16px;
+  width: 16px;
 }
 
 .select-container h3 {
-  font-size: 20px;
+  font-size: 18px;
+  margin: 0;
 }
+
 
 .slot-title {
   text-align: center;
@@ -423,5 +438,17 @@
   .cancel-popup-button {
     width: 100%;
     font-size: 14px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .select-label {
+    font-size: 16px;
+    gap: 6px;
+  }
+
+  .select-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
   }
 }
