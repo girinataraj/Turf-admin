@@ -212,7 +212,8 @@ const Management = () => {
           &#x276F;
         </button>
       </div>
-
+      
+      {/* Date calander */}
       <div className="calendar-nav weekdays-inside-nav">
         <button className="left-calendar" onClick={prevWeek}>
           &#x276E;
