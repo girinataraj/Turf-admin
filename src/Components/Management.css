@@ -422,6 +422,7 @@
   .back-button {
     font-size: 22px;
     padding: 8px 12px;
+    margin-bottom: 15px;
   }
 
   .back-button img {
@@ -450,5 +451,12 @@
   .select-label input[type="checkbox"] {
     width: 16px;
     height: 16px;
+  }
+
+  .calendar-nav
+  {
+    font-size: 24px;
+    gap: 8px;
+    margin-bottom: 16px;
   }
 }
